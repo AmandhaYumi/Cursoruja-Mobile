@@ -1,60 +1,84 @@
-import { View, Text, Image, Button } from "react-native";
 import { useContext } from "react";
-import { globalStyles } from "../styles/Global";
-import { UserContext } from "../context/UserContext";
+import { View, Text, Image, ImageBackground } from "react-native";
 
-export default function Perfil({ navigation }) {
+import { UserContext } from "../context/UserContext";
+import { globalStyles } from "../styles/Global";
+
+export default function Perfil() {
   const { user } = useContext(UserContext);
 
   if (!user.nome) {
     return (
-      <View style={globalStyles.container}>
-        <Text style={globalStyles.tituloSecao}>
-          Faça o cadastro primeiro
-        </Text>
-      </View>
+      <ImageBackground
+        source={require("../assets/background.png")}
+        style={globalStyles.background}
+      >
+        <View style={[
+          globalStyles.container,
+          { justifyContent: "center", alignItems: "center" }
+        ]}>
+          <Text style={globalStyles.tituloSecao}>
+            Faça o cadastro primeiro
+          </Text>
+        </View>
+      </ImageBackground>
     );
   }
 
   return (
-    <View style={globalStyles.container}>
+    <ImageBackground
+      source={require("../assets/background.png")}
+      style={globalStyles.background}
+    >
+      <View style={[
+        globalStyles.container,
+        { alignItems: "center", paddingTop: 40 }
+      ]}>
 
-      <Text style={globalStyles.tituloSecao}>Perfil</Text>
+        <Text style={globalStyles.tituloSecao}>
+          Perfil do Usuário
+        </Text>
 
-      {user.foto && (
-        <Image
-          source={{ uri: user.foto }}
-          style={{
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            alignSelf: "center",
-            marginBottom: 15
-          }}
-        />
-      )}
+        {user.foto && (
+          <Image
+            source={{ uri: user.foto }}
+            style={{
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              marginBottom: 20
+            }}
+          />
+        )}
 
-      <Text style={globalStyles.textoDados}>
-        <Text style={globalStyles.bold}>Nome:</Text> {user.nome}
-      </Text>
+        <View style={[
+          globalStyles.cardDados,
+          { width: "90%" }
+        ]}>
 
-      <Text style={globalStyles.textoDados}>
-        <Text style={globalStyles.bold}>Curso:</Text> {user.curso}
-      </Text>
+          <Text style={globalStyles.textoDados}>
+            <Text style={globalStyles.bold}>Nome:</Text> {user.nome}
+          </Text>
 
-      <Text style={globalStyles.textoDados}>
-        <Text style={globalStyles.bold}>Disciplina:</Text> {user.disciplina}
-      </Text>
+          <Text style={globalStyles.textoDados}>
+            <Text style={globalStyles.bold}>Curso:</Text> {user.curso}
+          </Text>
 
-      <Text style={globalStyles.textoDados}>
-        <Text style={globalStyles.bold}>Descrição:</Text> {user.descricao}
-      </Text>
+          <Text style={globalStyles.textoDados}>
+            <Text style={globalStyles.bold}>Disciplina:</Text> {user.disciplina}
+          </Text>
 
-      <Text style={globalStyles.textoDados}>
-        <Text style={globalStyles.bold}>Endereço:</Text> {user.endereco}
-      </Text>
+          <Text style={globalStyles.textoDados}>
+            <Text style={globalStyles.bold}>Descrição:</Text> {user.descricao}
+          </Text>
 
-      <Button title="Ver Devs" onPress={() => navigation.navigate("Devs")} />
-    </View>
+          <Text style={globalStyles.textoDados}>
+            <Text style={globalStyles.bold}>Endereço:</Text> {user.endereco}
+          </Text>
+
+        </View>
+
+      </View>
+    </ImageBackground>
   );
 }

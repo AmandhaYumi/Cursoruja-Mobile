@@ -1,4 +1,5 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useRef } from "react";
+
 import {
   View,
   Text,
@@ -9,22 +10,43 @@ import {
   ScrollView
 } from "react-native";
 
+import {
+  CameraView,
+  useCameraPermissions
+} from "expo-camera";
+
 import { globalStyles } from "../styles/Global";
 import { UserContext } from "../context/UserContext";
 
 export default function Cadastro({ navigation }) {
+
   const { setUser } = useContext(UserContext);
 
   const [nome, setNome] = useState("");
   const [curso, setCurso] = useState("");
   const [disciplina, setDisciplina] = useState("");
-  const [descricao, setDescricao] = useState(""); 
+  const [descricao, setDescricao] = useState("");
   const [cep, setCep] = useState("");
   const [endereco, setEndereco] = useState("");
 
+  const [foto, setFoto] = useState(null);
+
+  const [mostrarCamera, setMostrarCamera] = useState(false);
+
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const cameraRef = useRef(null);
+
+  const [loading, setLoading] = useState(false);
+
   async function buscarCEP() {
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      setLoading(true);
+
+      const res = await fetch(
+        `https://viacep.com.br/ws/${cep}/json/`
+      );
+
       const data = await res.json();
 
       if (data.erro) {
@@ -33,12 +55,39 @@ export default function Cadastro({ navigation }) {
       }
 
       setEndereco(data.logradouro);
+
     } catch (error) {
       alert("Erro ao buscar CEP");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function tirarFoto() {
+
+    if (!permission?.granted) {
+      const result = await requestPermission();
+
+      if (!result.granted) {
+        alert("Permissão da câmera negada");
+        return;
+      }
+    }
+
+    if (cameraRef.current) {
+
+      const photo =
+        await cameraRef.current.takePictureAsync();
+
+      setFoto(photo.uri);
+      setMostrarCamera(false);
+
+      alert("Foto capturada com sucesso!");
     }
   }
 
   function enviar() {
+
     if (!nome || !curso) {
       alert("Preencha os campos obrigatórios");
       return;
@@ -51,10 +100,32 @@ export default function Cadastro({ navigation }) {
       descricao,
       cep,
       endereco,
-      foto: null
+      foto
     });
 
     navigation.navigate("Perfil");
+  }
+
+  if (mostrarCamera) {
+
+    return (
+      <View style={{ flex: 1 }}>
+        <CameraView
+          ref={cameraRef}
+          style={{ flex: 1 }}
+        />
+
+        <Button
+          title="TIRAR FOTO"
+          onPress={tirarFoto}
+        />
+
+        <Button
+          title="CANCELAR"
+          onPress={() => setMostrarCamera(false)}
+        />
+      </View>
+    );
   }
 
   return (
@@ -62,6 +133,7 @@ export default function Cadastro({ navigation }) {
       source={require("../assets/background.png")}
       style={globalStyles.background}
     >
+
       <ScrollView contentContainerStyle={globalStyles.scrollContent}>
 
         <Image
@@ -70,7 +142,24 @@ export default function Cadastro({ navigation }) {
         />
 
         <View style={globalStyles.containerForm}>
-          <Text style={globalStyles.tituloSecao}>Cadastro</Text>
+
+          <Text style={globalStyles.tituloSecao}>
+            Cadastro
+          </Text>
+
+          {foto && (
+            <Image
+              source={{ uri: foto }}
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                alignSelf: "center",
+                marginTop: 20,
+                marginBottom: 10
+              }}
+            />
+          )}
 
           <TextInput
             placeholder="Nome"
@@ -105,13 +194,28 @@ export default function Cadastro({ navigation }) {
             onBlur={buscarCEP}
           />
 
+          {loading && (
+            <Text style={{ marginVertical: 5 }}>
+              Buscando endereço...
+            </Text>
+          )}
+
           {endereco ? (
             <Text style={{ marginVertical: 5 }}>
               Endereço: {endereco}
             </Text>
           ) : null}
 
-          <Button title="ENVIAR" onPress={enviar} />
+          <Button
+            title="TIRAR FOTO"
+            onPress={() => setMostrarCamera(true)}
+          />
+
+          <Button
+            title="ENVIAR"
+            onPress={enviar}
+          />
+
         </View>
 
       </ScrollView>

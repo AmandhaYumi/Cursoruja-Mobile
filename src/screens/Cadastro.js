@@ -40,6 +40,12 @@ export default function Cadastro({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   async function buscarCEP() {
+
+    if (!cep || cep.length < 8) {
+      alert("Digite um CEP válido");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -50,7 +56,8 @@ export default function Cadastro({ navigation }) {
       const data = await res.json();
 
       if (data.erro) {
-        alert("CEP inválido");
+        alert("CEP não encontrado");
+        setEndereco("");
         return;
       }
 
@@ -65,49 +72,70 @@ export default function Cadastro({ navigation }) {
 
   async function tirarFoto() {
 
-    if (!permission?.granted) {
-      const result = await requestPermission();
+    try {
 
-      if (!result.granted) {
-        alert("Permissão da câmera negada");
+      if (!permission?.granted) {
+        const result = await requestPermission();
+
+        if (!result.granted) {
+          alert("Permissão da câmera negada");
+          return;
+        }
+      }
+
+      if (!cameraRef.current) {
+        alert("Câmera não disponível");
         return;
       }
-    }
 
-    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
 
-      const photo =
-        await cameraRef.current.takePictureAsync();
+      if (!photo?.uri) {
+        alert("Erro ao capturar foto");
+        return;
+      }
 
       setFoto(photo.uri);
       setMostrarCamera(false);
 
       alert("Foto capturada com sucesso!");
+
+    } catch (error) {
+      alert("Erro ao usar câmera");
     }
   }
 
   function enviar() {
 
-    if (!nome || !curso) {
-      alert("Preencha os campos obrigatórios");
-      return;
-    }
-
-    setUser({
-      nome,
-      curso,
-      disciplina,
-      descricao,
-      cep,
-      endereco,
-      foto
-    });
-
-    navigation.navigate("Perfil");
+  if (!nome || !curso || !cep) {
+    alert("Preencha nome, curso e CEP");
+    return;
   }
 
-  if (mostrarCamera) {
+  setUser({
+    nome,
+    curso,
+    disciplina,
+    descricao,
+    cep,
+    endereco,
+    foto
+  });
 
+  alert("Dados enviados com sucesso!");
+
+  setNome("");
+  setCurso("");
+  setDisciplina("");
+  setDescricao("");
+  setCep("");
+  setEndereco("");
+  setFoto(null);
+
+  navigation.navigate("Perfil");
+}
+
+  if (mostrarCamera) {
     return (
       <View style={{ flex: 1 }}>
         <CameraView
@@ -193,10 +221,9 @@ export default function Cadastro({ navigation }) {
             onChangeText={setCep}
             onBlur={buscarCEP}
           />
-
           {loading && (
-            <Text style={{ marginVertical: 5 }}>
-              Buscando endereço...
+            <Text style={{ marginVertical: 8, fontWeight: "bold" }}>
+              🔄 Buscando endereço...
             </Text>
           )}
 
